@@ -27,7 +27,6 @@
             <div class="question">
                 <label>2. 是否购买OPDM？</label>
                 <select id="opdm" required>
-                    <option value="">空值</option>
                     <option value="yes">是</option>
                     <option value="no">否</option>
                 </select>
@@ -36,7 +35,6 @@
             <div class="question">
                 <label>3. 签署文件类型(单选)：</label>
                 <select id="fileType" required>
-                    <option value="">空值</option>
                     <option value="single">单方签</option>
                     <option value="multiple">多方签</option>
                     <option value="both">单双方皆有</option>
@@ -63,7 +61,6 @@
                 
                 <label>8. 发起方签署方式（单选）：</label>
                 <select id="multipleInitiator">
-                    <option value="">空值</option>
                     <option value="auto">自动签</option>
                     <option value="user">用户自选意愿</option>
                     <option value="sms">短信意愿</option>
@@ -74,7 +71,6 @@
                 
                 <label>9. 参与方签署方式（单选）：</label>
                 <select id="multipleParticipant">
-                    <option value="">空值</option>
                     <option value="auto">自动签</option>
                     <option value="user">用户自选意愿</option>
                     <option value="sms">短信意愿</option>
@@ -93,7 +89,6 @@
                 
                 <label>12. 参与方签署方式（单选）：</label>
                 <select id="singleParticipant">
-                    <option value="">空值</option>
                     <option value="auto">自动签</option>
                     <option value="user">用户自选意愿</option>
                     <option value="sms">短信意愿</option>
@@ -118,9 +113,9 @@
             document.querySelectorAll('select').forEach((select) => {
                 const emptyOption = document.createElement('option');
                 emptyOption.value = '';
-                emptyOption.text = '空值';
+                emptyOption.text = '--';
                 select.insertBefore(emptyOption, select.firstChild);
-                select.selectedIndex = 0; // 让“空值”成为默认选项
+                select.selectedIndex = 0; // 让“--”成为默认选项
             });
         });
 
