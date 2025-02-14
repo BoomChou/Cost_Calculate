@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>签署用量成本计算助手</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: #fff; padding: 20px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); }
+        h1 { text-align: center; color: #333; }
+        label { display: block; margin-top: 10px; }
+        input[type="text"], select { width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { background-color: #4CAF50; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; width: 100%; margin-top: 20px; }
+        .btn:hover { background-color: #45a049; }
+        .question { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>签署用量成本计算助手</h1>
+        <form id="costForm">
+            <div class="question">
+                <label>1. 您好，欢迎使用签署用量成本计算助手。请您配合我完成以下问题：</label>
+            </div>
+
+            <div class="question">
+                <label>2. 是否购买OPDM？</label>
+                <select id="opdm" required>
+                    <option value="">请选择</option>
+                    <option value="yes">是</option>
+                    <option value="no">否</option>
+                </select>
+            </div>
+
+            <div class="question">
+                <label>3. 签署文件类型(单选)：</label>
+                <select id="fileType" required>
+                    <option value="">空值</option>
+                    <option value="single">单方签</option>
+                    <option value="multiple">多方签</option>
+                    <option value="both">单双方皆有</option>
+                </select>
+            </div>
+
+            <div class="question">
+                <label>4. 每年平均的发起方数量（单选）：</label>
+                <input type="text" id="initiators" required>
+            </div>
+
+            <div class="question">
+                <label>5. 每年平均的参与方数量（单选）：</label>
+                <input type="text" id="participants" required>
+            </div>
+
+            <!-- 多方签和单方签部分 -->
+            <div id="multipleSignFields" style="display:none;">
+                <label>6. 多方签文件数量：</label>
+                <input type="text" id="multipleFiles">
+                
+                <label>7. 每份文件的存储大小 (MB)：</label>
+                <input type="text" id="multipleFileSize">
+                
+                <label>8. 发起方签署方式（单选）：</label>
+                <select id="multipleInitiator">
+                    <option value="">空值</option>
+                    <option value="auto">自动签</option>
+                    <option value="user">用户自选意愿</option>
+                    <option value="sms">短信意愿</option>
+                    <option value="face">人脸意愿</option>
+                    <option value="password">密码意愿</option>
+                    <option value="video">互动视频签意愿</option>
+                </select>
+                
+                <label>9. 参与方签署方式（单选）：</label>
+                <select id="multipleParticipant">
+                    <option value="">空值</option>
+                    <option value="auto">自动签</option>
+                    <option value="user">用户自选意愿</option>
+                    <option value="sms">短信意愿</option>
+                    <option value="face">人脸意愿</option>
+                    <option value="password">密码意愿</option>
+                    <option value="video">互动视频签意愿</option>
+                </select>
+            </div>
+
+            <div id="singleSignFields" style="display:none;">
+                <label>10. 单方签文件数量：</label>
+                <input type="text" id="singleFiles">
+                
+                <label>11. 每份文件的存储大小 (MB)：</label>
+                <input type="text" id="singleFileSize">
+                
+                <label>12. 参与方签署方式（单选）：</label>
+                <select id="singleParticipant">
+                    <option value="">空值</option>
+                    <option value="auto">自动签</option>
+                    <option value="user">用户自选意愿</option>
+                    <option value="sms">短信意愿</option>
+                    <option value="face">人脸意愿</option>
+                    <option value="password">密码意愿</option>
+                    <option value="video">互动视频签意愿</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn">计算总成本</button>
+        </form>
+
+        <div id="result" style="display:none; margin-top: 30px;">
+            <h3>计算结果：</h3>
+            <p>签署用量的实际购买总成本: <span id="totalCost">0</span> 元</p>
+        </div>
+    </div>
+
+    <script>
+        // 在页面加载时清空下拉框默认值
+        window.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelectorAll('select').forEach((select) => {
+                const emptyOption = document.createElement('option');
+                emptyOption.value = '';
+                emptyOption.text = '空值';
+                select.insertBefore(emptyOption, select.firstChild);
+                select.selectedIndex = 0; // 让“空值”成为默认选项
+            });
+        });
+
+        // 根据签署文件类型显示相关的输入字段
+        document.getElementById('fileType').addEventListener('change', function() {
+            const fileType = this.value;
+            if (fileType === 'multiple' || fileType === 'both') {
+                document.getElementById('multipleSignFields').style.display = 'block';
+            } else {
+                document.getElementById('multipleSignFields').style.display = 'none';
+            }
+            if (fileType === 'single' || fileType === 'both') {
+                document.getElementById('singleSignFields').style.display = 'block';
+            } else {
+                document.getElementById('singleSignFields').style.display = 'none';
+            }
+        });
+
+        // 计算结果
+        document.getElementById('costForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // 获取输入的数据，并转换为数字
+            const opdm = document.getElementById('opdm').value;
+            const fileType = document.getElementById('fileType').value;
+            const initiators = parseFloat(document.getElementById('initiators').value) || 0;
+            const participants = parseFloat(document.getElementById('participants').value) || 0;
+            const multipleFiles = parseFloat(document.getElementById('multipleFiles').value) || 0;
+            const multipleFileSize = parseFloat(document.getElementById('multipleFileSize').value) || 0;
+            const singleFiles = parseFloat(document.getElementById('singleFiles').value) || 0;
+            const singleFileSize = parseFloat(document.getElementById('singleFileSize').value) || 0;
+
+            // 知识库成本信息
+            const fileStorageCost = 0.005; // 文件存储单位成本
+            const userSelectCost = 0.04; // 用户自选意愿单位成本
+            const smsCost = 0.026; // 短信意愿单位成本
+            const faceCost = 0.05; // 人脸意愿单位成本
+            const videoCost = 0.5 // 互动视频签意愿单位成本
+            const authCost = 0.28; // 个人&企业综合认证单位成本
+
+            // 计算认证总成本
+            let authTotal = 0;
+            if (!isNaN(initiators) && !isNaN(participants)) {
+                authTotal = (initiators + participants) * authCost;
+            } else if (!isNaN(initiators)) {
+                authTotal = (initiators * authCost) + (multipleFiles + singleFiles) * authCost;
+            }
+
+            // 计算短信总成本
+            const smsTotal = (multipleFiles + singleFiles) * smsCost;
+
+            // 判断是否购买OPDM，决定是否计算存储成本
+            let storageTotal = 0;
+            if (opdm === 'no') {
+                storageTotal = (multipleFiles * multipleFileSize + singleFiles * singleFileSize) * fileStorageCost;
+            }
+
+            // 计算签署意愿成本
+            let signingCost = 0;
+
+            // 发起方和参与方选择意愿的逻辑
+            if (fileType === 'multiple' || fileType === 'both') {
+                const multipleInitiator = document.getElementById('multipleInitiator').value;
+                const multipleParticipant = document.getElementById('multipleParticipant').value;
+
+                // 发起方意愿成本
+                if (multipleInitiator === 'user') {
+                    signingCost += (userSelectCost * multipleFiles).toFixed(5);
+                } else if (multipleInitiator === 'sms') {
+                    signingCost += (smsCost * multipleFiles).toFixed(5);
+                } else if (multipleInitiator === 'face') {
+                    signingCost += (faceCost * multipleFiles).toFixed(5);
+                } else if (multipleInitiator === 'video') {
+                    signingCost += (videoCost * multipleFiles).toFixed(5);
+                }
+
+                // 参与方意愿成本
+                if (multipleParticipant === 'user') {
+                    signingCost += (userSelectCost * multipleFiles).toFixed(5);
+                } else if (multipleParticipant === 'sms') {
+                    signingCost += (smsCost * multipleFiles).toFixed(5);
+                } else if (multipleParticipant === 'face') {
+                    signingCost += (faceCost * multipleFiles).toFixed(5);
+                } else if (multipleParticipant === 'video') {
+                    signingCost += (videoCost * multipleFiles).toFixed(5);
+                }
+            }
+
+            if (fileType === 'single' || fileType === 'both') {
+                const singleParticipant = document.getElementById('singleParticipant').value;
+
+                // 参与方意愿成本
+                if (singleParticipant === 'user') {
+                    signingCost += (userSelectCost * singleFiles).toFixed(5);
+                } else if (singleParticipant === 'sms') {
+                    signingCost += (smsCost * singleFiles).toFixed(5);
+                } else if (singleParticipant === 'face') {
+                    signingCost += (faceCost * singleFiles).toFixed(5);
+                } else if (singleParticipant === 'video') {
+                    signingCost += (videoCost * singleFiles).toFixed(5);
+                }
+            }
+
+            // 总成本
+            const totalCost = authTotal + smsTotal + storageTotal + parseFloat(signingCost);
+
+            // 显示结果
+            document.getElementById('totalCost').textContent = totalCost.toFixed(2);
+            document.getElementById('result').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
